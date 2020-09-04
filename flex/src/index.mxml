@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Application xmlns:mx="http://www.adobe.com/2006/mxml"
+        layout="vertical"
+        verticalAlign="middle"
+        backgroundColor="white">
+
+    <mx:Script>
+        <![CDATA[
+        
+          import mx.rpc.events.ResultEvent;
+		  
+		  private function pesquisar():void{
+			  if (txtCep.length == 5 && txtCepCompl.length == 3){
+		  	  	  buscaCep.url = "http://www.buscarcep.com.br/?formato=xml&cep=" + txtCep.text + txtCepCompl.text;
+			  	  buscaCep.send();
+			  }
+		  }
+		  
+		  private function cepResultHandler(event:ResultEvent):void{
+	          //HTTPService returns an XML Document
+	          var resultXML:XMLList = new XMLList(new XML(event.result));
+	          if (resultXML != null && resultXML.resultado == 1){
+	              this.txtEndereco.text = new String(resultXML.tipo_logradouro + " " + resultXML.logradouro);
+	              this.txtBairro.text   = new String(resultXML.bairro);
+	              this.txtCidade.text   = new String(resultXML.cidade);
+	              this.txtUf.text 	 	= new String(resultXML.uf);
+	          } else {
+	              this.txtEndereco.text = "";
+	              this.txtBairro.text   = "";
+	              this.txtCidade.text   = "";
+	              this.txtUf.text 	 	= "";
+	          }
+		  }
+
+        ]]>
+    </mx:Script>
+
+    <mx:ApplicationControlBar dock="true">
+        <mx:Form>
+            <mx:FormItem label="CEP:" required="true" direction="horizontal">
+                <mx:TextInput id="txtCep" maxChars="5" />
+                <mx:TextInput id="txtCepCompl" maxChars="3" />
+            </mx:FormItem>
+            <mx:FormItem label="Endereço:" direction="horizontal">
+                <mx:TextInput id="txtEndereco" maxChars="20" />
+            </mx:FormItem>
+            <mx:FormItem label="Bairro:" direction="horizontal">
+                <mx:TextInput id="txtBairro" maxChars="20" />
+            </mx:FormItem>
+            <mx:FormItem label="Cidade:" direction="horizontal">
+                <mx:TextInput id="txtCidade" maxChars="20" />
+            </mx:FormItem>
+            <mx:FormItem label="UF:" direction="horizontal">
+                <mx:TextInput id="txtUf" maxChars="2" />
+            </mx:FormItem>
+            <mx:FormItem label="" direction="horizontal">
+				<mx:Button label="Pesquisar CEP" click="pesquisar();" />
+			</mx:FormItem>
+        </mx:Form>
+    </mx:ApplicationControlBar>
+
+    <mx:HTTPService id="buscaCep" result="cepResultHandler(event)"
+        method="POST" showBusyCursor="true" resultFormat="e4x"/>
+      	  
+</mx:Application>

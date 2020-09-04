@@ -1,0 +1,358 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:services="services.*"
+			   xmlns:maps2="com.google.maps.*"
+			   height="710" minWidth="1024" minHeight="600" backgroundColor="#F5F5F5" creationComplete="init()">
+	
+	<!-- Para criar sua chave: http://code.google.com/apis/maps/signup.html -->
+
+	<fx:Script>
+		<![CDATA[
+			import flash.utils.describeType;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.rpc.http.HTTPService;
+			
+			var servico:HTTPService = new HTTPService();
+			
+			import com.google.maps.LatLng;
+			import com.google.maps.Map;
+			import com.google.maps.MapEvent;
+			import com.google.maps.MapType;
+			import com.google.maps.services.ClientGeocoder;
+			import com.google.maps.services.GeocodingEvent;
+			import com.google.maps.services.GeocodingResponse;
+			import com.google.maps.services.Placemark;
+			
+			import mx.controls.Alert;
+			
+			private var geocoder:ClientGeocoder;
+			
+			[Bindable]
+			public var tipoVeiculo:ArrayCollection = 
+				new ArrayCollection(["Scania", "Cegonha", "Tanque",
+					"Frigorificado", "Climatizado", "Comum", "Van"]);
+			
+			[Bindable]
+			public var tipoCarga:ArrayCollection = 
+				new ArrayCollection(["Cerveja", "Alimento", 
+					"Automóvel", "Caixa", "Envelope", "Gasolina"]);
+			
+			
+			protected function button_clickHandler(event:MouseEvent):void
+			{
+				var endOrigem:String = txlogradouro.text+", "+txcomplemento.text+" - "+txbairro.text+" - "+txcidade.text+"/"+txtestado.text;
+				var endDestino:String = txlogradouro0.text+", "+txcomplemento0.text+" - "+txbairro0.text+" - "+txcidade0.text+"/"+txtestado0.text;
+				var data:String = txData.text+" "+txHora.text;
+				var tipoVeiculo:String;
+				var tipoCarga:String;
+				switch (dbtipoveiculo.selectedIndex){
+					case 0:
+						tipoVeiculo = "Scania";
+						break;
+					case 1:
+						tipoVeiculo = "Cegonha";
+						break;
+					case 2:
+						tipoVeiculo = "Tanque";
+						break;
+					case 3:
+						tipoVeiculo = "Frigorificado";
+						break;
+					case 4:
+						tipoVeiculo = "Climatizado";
+						break;
+					case 5:
+						tipoVeiculo = "Comum";
+						break;
+					case 6:
+						tipoVeiculo = "Van";
+						break;
+					
+					default: break;						
+				}
+				switch (dptipocarga.selectedIndex){
+					case 0:
+						tipoCarga = "Cerveja";
+						break;
+					case 1:
+						tipoCarga = "Alimento";
+						break;
+					case 2:
+						tipoCarga = "Automóvel";
+						break;
+					case 3:
+						tipoCarga = "Caixa";
+						break;
+					case 4:
+						tipoCarga = "Envelope";
+						break;
+					case 5:
+						tipoCarga = "Gasolina";
+						break;
+					
+					default: break;						
+				}
+				var qtd:int = txtquantidade.value;
+				cadastrarPropostaResult3.token = serverController.cadastrarProposta(tipoVeiculo,tipoCarga,qtd,parseInt(txtpeso.text),endOrigem,endDestino,data);
+			}
+
+
+			
+			private function onMapReady(event:Event):void {
+				button1_clickHandler3(null);
+			}
+			
+			private function geocoder_geocodingSuccess(evt:GeocodingEvent):void {
+				var result:Placemark = GeocodingResponse(evt.response).placemarks[0];
+				map.setCenter(result.point, 13);
+			}
+			
+			private function geocoder_geocodingFailure(evt:GeocodingEvent):void {
+				//Alert.show("Unable to geocode address: " + evt.name);
+			}
+			
+			protected function button1_clickHandler3(event:MouseEvent):void
+			{
+				geocoder = new ClientGeocoder();
+				geocoder.addEventListener(GeocodingEvent.GEOCODING_SUCCESS, geocoder_geocodingSuccess);
+				geocoder.addEventListener(GeocodingEvent.GEOCODING_FAILURE, geocoder_geocodingFailure);
+				geocoder.geocode(txlogradouro.text +" " +txcidade.text +" "+txtestado.text);
+				
+			}
+			
+			protected function button1_clickHandler(event:MouseEvent):void
+			{
+				if (textcep.text != "")
+				{
+				servico.url = "http://www.buscarcep.com.br/?";
+				servico.method = "GET";
+				servico.resultFormat = "e4x";
+				
+				var argumentos:URLVariables = new URLVariables();
+				argumentos.formato = "xml";
+				argumentos.chave="1n3j1GjD9NvPPibwnYkTrOMs2MyaI40";
+				argumentos.cep = textcep.text;
+				servico.send(argumentos);
+				servico.removeEventListener(ResultEvent.RESULT,cepResultHandler2);
+				servico.addEventListener(ResultEvent.RESULT,cepResultHandler)
+				servico.addEventListener(FaultEvent.FAULT,onError);
+				}else
+				{
+					Alert.show("Por favor Informe CEP");
+				}
+			}
+			private function cepResultHandler(event:ResultEvent):void{				
+				var x:XML = event.result as XML;
+
+				for each (var ret1:XML in event.result.retorno)				
+				{  
+					if (ret1.resultado_txt == "cep nao encontrado"){
+						Alert.show("CEP não encontrado!");
+										txlogradouro.text = "";
+										txcidade.text = "";
+										txtestado.text = "";
+										txobservacao.text = "";
+										txbairro.text ="";
+
+					}
+					txlogradouro.text = ret1.tipo_logradouro +" "+ret1.logradouro+"\n";
+					txcidade.text = ret1.cidade +"\n";
+					txtestado.text = ret1.uf +"\n";
+					txbairro.text = ret1.bairro + "\n";
+					
+					txbairro.enabled= true;
+					txcidade.enabled= true;
+					txlogradouro.enabled= true;
+					txcomplemento.enabled= true;
+					txobservacao.enabled= true;
+					txtestado.enabled= true;
+					textcep0.enabled= true;
+					
+				}				
+			}
+			protected function button2_clickHandler2(event:MouseEvent):void
+			{
+				if (textcep0.text != "")
+				{
+					servico.url = "http://www.buscarcep.com.br/?";
+					servico.method = "GET";
+					servico.resultFormat = "e4x";
+					
+					var argumentos1:URLVariables = new URLVariables();
+					argumentos1.formato = "xml";
+					argumentos1.chave="1n3j1GjD9NvPPibwnYkTrOMs2MyaI40";
+					argumentos1.cep = textcep0.text;
+					servico.send(argumentos1);
+					servico.removeEventListener(ResultEvent.RESULT,cepResultHandler);
+					servico.addEventListener(ResultEvent.RESULT,cepResultHandler2)
+					servico.addEventListener(FaultEvent.FAULT,onError);
+				}else
+				{
+					Alert.show("Por favor Informe CEP");
+				}
+			}
+			private function cepResultHandler2(event:ResultEvent):void{				
+				var x:XML = event.result as XML;
+
+				for each (var ret2:XML in event.result.retorno)				
+				{  
+					if (ret2.resultado_txt == "cep nao encontrado"){
+						Alert.show("CEP não encontrado!");
+										txlogradouro0.text = "";
+										txcidade0.text = "";
+										txtestado0.text = "";
+										txobservacao0.text = "";
+										txbairro0.text ="";
+					}
+					
+					txlogradouro0.text = ret2.tipo_logradouro +" "+ret2.logradouro+"\n";
+					txcidade0.text = ret2.cidade +"\n";
+					txtestado0.text = ret2.uf +"\n";
+					txbairro0.text = ret2.bairro + "\n";
+					
+					txbairro0.enabled= true;
+					txcidade0.enabled= true;
+					txlogradouro0.enabled= true;
+					txcomplemento0.enabled= true;
+					txobservacao0.enabled= true;
+					txtestado0.enabled= true;
+					
+					dptipocarga.enabled= true;
+					dbtipoveiculo.enabled= true;
+					txtquantidade.enabled= true;
+					txtpeso.enabled= true;
+					txtobs.enabled= true;
+					
+				}				
+			}
+			private function onError(event:FaultEvent):void{				
+				Alert.show("Erro: " + event.message.toString());				
+			}		
+			
+					
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:CallResponder id="cadastrarPropostaResult"/>
+		<services:ServerController id="serverController"
+								   fault="Alert.show(event.fault.faultString + '\n' + event.fault.faultDetail)"
+								   showBusyCursor="true"/>
+		<s:CallResponder id="cadastrarPropostaResult2"/>
+		<s:CallResponder id="cadastrarPropostaResult3"/>
+	</fx:Declarations>
+	<s:Image y="0" width="231" height="162" horizontalCenter="-305"
+			 source="images/fundo_cavalo2.png"/>
+	<s:Image y="-15" width="625" height="269" horizontalCenter="195"
+			 source="images/DSF_bakground1.png"/>
+	<s:Label y="123" color="#8D8D8D" fontFamily="Verdana" fontSize="30" horizontalCenter="270"
+			 text="Módulo Cliente"/>
+	<s:Label y="27" horizontalCenter="264" text="Bem-Vindo"/>
+	<s:Label id="lbUser" y="27" horizontalCenter="320" text="Cliente,"/>
+	<s:Label id="txtLogout" y="27" color="#FF0000" horizontalCenter="366" text="Logout"/>
+	<mx:TabNavigator y="161" width="1000" height="538" horizontalCenter="-1">
+		<s:NavigatorContent width="100%" height="100%" label="Solicitar Serviço">
+			<s:NavigatorContent width="100%" height="505" label="Nova Solicitação">
+				<s:Label x="6" y="10" fontSize="15" fontWeight="bold" text="Local Coleta"/>
+				<s:Label x="10" y="149" fontSize="15" fontWeight="bold" text="Local Entrega"/>
+				<s:Label x="10" y="47" fontSize="14" text="CEP:"/>
+				<s:TextInput id="textcep" x="43" y="40" width="78" enabled="true"/>
+				<s:Label x="163" y="47" fontSize="14" text="Estado"/>
+				<s:Label x="251" y="46" fontSize="14" text="Cidade"/>
+				<s:Label x="10" y="75" fontSize="14" text="Logradouro:"/>
+				<s:TextInput id="txlogradouro" x="100" y="67" width="472" enabled="false"/>
+				<s:Label x="11" y="105" fontSize="14" text="Complemento:"/>
+				<s:TextInput id="txcomplemento" x="116" y="97" enabled="false"/>
+				<s:Label x="246" y="107" text="Obs:"/>
+				<s:TextInput id="txobservacao" x="281" y="97" width="291" enabled="false"/>
+				<s:Label x="11" y="284" fontSize="15" fontWeight="bold" text="Dados Complementares"/>
+				<s:Label x="7" y="313" fontSize="14" text="Tipo Veiculo:"/>
+				<mx:DateField id="txData" x="417" y="354"/>
+				<s:TextInput id="txHora" x="417" y="394" width="75"/>
+				<s:DropDownList id="dbtipoveiculo" x="99" y="309" width="228" enabled="false" dataProvider="{tipoVeiculo}">
+				</s:DropDownList>
+				<s:Label x="333" y="313" fontSize="14" text="Tipo Carga:"/>
+				<s:Label x="374" y="357" fontSize="14" text="Data:"/>
+				<s:Label x="374" y="398" fontSize="14" text="Hora:"/>
+				<s:DropDownList id="dptipocarga" x="417" y="309" width="162" enabled="false" dataProvider="{tipoCarga}">
+					</s:DropDownList>
+				<s:Label x="8" y="350" fontSize="14" text="Quantidade:"/>
+				<s:NumericStepper id="txtquantidade" x="97" y="345"/>
+				<s:Label x="175" y="349" fontSize="14" text="Peso:"/>
+				<s:TextInput id="txtpeso" x="218" y="346" enabled="false"/>
+				<s:Label x="12" y="387" fontSize="14" text="Obs:"/>
+				<s:TextArea id="txtobs" x="55" y="383" width="272" height="113" editable="false"/>
+				<s:Button x="125" y="35" width="36" height="29" label="Button"
+						  click="button1_clickHandler(event)" id="bt1" icon="images/Lupa.png"/>
+				<s:TextInput id="txtestado" x="217" y="39" width="29" enabled="false"/>
+				<s:TextInput id="txcidade" x="300" y="40" enabled="false"/>
+				<s:TextInput id="txbairro" x="464" y="40" enabled="false"/>
+				<s:Label x="418" y="44" fontSize="14" text="Bairro"/>
+				<s:Label x="13" y="177" fontSize="14" text="CEP:"/>
+				<s:TextInput id="textcep0" x="46" y="170" width="78" enabled="false"/>
+				<s:Label x="166" y="177" fontSize="14" text="Estado"/>
+				<s:Label x="254" y="176" fontSize="14" text="Cidade"/>
+				<s:Label x="13" y="205" fontSize="14" text="Logradouro:"/>
+				<s:TextInput id="txlogradouro0" x="103" y="197" width="472" enabled="false"/>
+				<s:Label x="14" y="235" fontSize="14" text="Complemento:"/>
+				<s:TextInput id="txcomplemento0" x="118" y="227" enabled="false"/>
+				<s:Label x="249" y="237" text="Obs:"/>
+				<s:TextInput id="txobservacao0" x="284" y="227" width="291" enabled="false"/>
+				<s:Button x="126" y="159" width="32" height="30" label="Button"
+						  click="button2_clickHandler2(event)" id="bt2" icon="images/Lupa.png"/>
+				<s:TextInput id="txtestado0" x="220" y="169" width="29" enabled="false"/>
+				<s:TextInput id="txcidade0" x="303" y="170" enabled="false"/>
+				<s:TextInput id="txbairro0" x="467" y="170" enabled="false"/>
+				<s:Label x="421" y="174" fontSize="14" text="Bairro"/>
+				<s:Button id="btrota" x="756" y="35" label="Gerar Rota" click="button1_clickHandler3(event)"/>
+				<s:Button id="btgerasolitacao" x="417" y="456" label="Gravar Solicitação" click="button_clickHandler(event)"/>
+				<maps2:Map x="619" y="75" width="358" height="431"/>
+				<mx:VRule x="595" y="10" width="4" height="485"/>
+			</s:NavigatorContent>
+		</s:NavigatorContent>
+		<s:NavigatorContent width="100%" height="100%" label="Meus Solicitações">
+			<s:DataGrid id="dgFretes" x="9" y="14" width="834" height="394" requestedRowCount="4"
+						resizableColumns="true">
+				<s:columns>
+					<s:ArrayList>
+						<s:GridColumn width="70" dataField="veiculo" headerText="Veículo"></s:GridColumn>
+						<s:GridColumn width="70" dataField="carga" headerText="Carga"></s:GridColumn>
+						<s:GridColumn width="40" dataField="quantidade" headerText="Quantidade"></s:GridColumn>
+						<s:GridColumn width="60" dataField="peso" headerText="Peso"></s:GridColumn>
+						<s:GridColumn dataField="origem" headerText="Origem"></s:GridColumn>
+						<s:GridColumn dataField="destino" headerText="Destino"></s:GridColumn>
+						<s:GridColumn width="70" dataField="data" headerText="Data"></s:GridColumn>
+						<s:GridColumn width="50" dataField="hora" headerText="Hora"></s:GridColumn>
+						<s:GridColumn width="70" dataField="detalhes" editable="false" headerText="">
+							<s:itemRenderer>
+								<fx:Component>									
+									<s:GridItemRenderer>
+										<s:Button height="100%" label="Detalhes"
+												  click="dispatchEvent(new Event('detalhes', true))"/>
+									</s:GridItemRenderer>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>						
+					</s:ArrayList>
+				</s:columns>
+				<s:typicalItem>
+					<fx:Object dataField1="Sample Data" dataField2="Sample Data"
+							   dataField3="Sample Data"></fx:Object>
+				</s:typicalItem>
+				<s:ArrayList>
+					<fx:Object carga="Cerveja" data="25/06/11" destino="R. America, n 36 - Bauru/SP"
+							   hora="06:00" origem="R. Chile, n 456 - Curitiba/PR" peso="1000 Kg"
+							   quantidade="500" veiculo="Scania"></fx:Object>					
+				</s:ArrayList>
+			</s:DataGrid>
+		</s:NavigatorContent>
+	</mx:TabNavigator>
+	
+						
+</s:Application>

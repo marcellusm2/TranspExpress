@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:TitleWindow xmlns:mx="http://www.adobe.com/2006/mxml"
+				layout="absolute" 
+				width="566"
+				backgroundColor="#4C767D"
+				title="Editar"
+				showCloseButton="true"
+				close="Fechar()"
+				creationComplete="init()" borderColor="#4C767D">
+	<mx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.core.Application;
+			import mx.core.IFlexDisplayObject;
+			import mx.managers.PopUpManager;
+			import mx.validators.Validator;
+			
+			import spark.components.Application;
+			
+			[Bindable]
+			private static var selecionado:Object;
+			public static function abrirPOPUP(value:Object):IFlexDisplayObject
+			{
+				selecionado = value;
+				return PopUpManager.createPopUp(DisplayObject(mx.core.Application.application), Aceitar, true );
+			}
+			
+			private function init():void
+			{
+				PopUpManager.centerPopUp(this);
+			}
+			
+			private function Salvar():void
+			{
+				Alert.show('Salvo com sucesso');
+				Fechar();
+			}
+			private function Fechar():void
+			{
+				PopUpManager.removePopUp(this);
+			}
+		]]>
+	</mx:Script>
+	<mx:removedEffect>
+		<mx:Parallel>
+			<mx:Zoom />
+			<mx:Fade />
+		</mx:Parallel>
+	</mx:removedEffect>
+	<mx:addedEffect>
+		<mx:Fade />
+	</mx:addedEffect>
+</mx:TitleWindow>

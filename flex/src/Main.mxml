@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<s:Application xmlns:d="http://ns.adobe.com/fxg/2008/dt" xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" width="1024" height="768" backgroundColor="#FFFFFF" preloaderChromeColor="#FFFFFF">
+	<fx:Style source="Main.css"/>
+	<s:states>
+		<s:State name="Login"/>
+	</s:states>
+	<s:BitmapImage smooth="true" source="@Embed('/images/Background.png')" d:userLabel="Background" x="0" y="0"/>
+	<s:BitmapImage smooth="true" source="@Embed('/images/DSF_bakground1.png')" d:userLabel="DSF_bakground1" x="64" y="170"/>
+	<s:BitmapImage alpha="0.5" smooth="true" source="@Embed('/images/fundo_cavalo.png')" d:userLabel="fundo_cavalo" x="591" y="0"/>
+	<s:BitmapImage alpha="0.5" smooth="true" source="@Embed('/images/Layer 1.png')" d:userLabel="Layer 1" x="309" y="294"/>
+	<s:TextInput x="444" y="338" width="172"/>
+	<s:TextInput x="444" y="383" displayAsPassword="true" width="172"/>
+	<s:Button x="546" y="431" label="Login"/>
+	<s:RichText alpha="0.5" color="#000000" fontFamily="Calibri" fontSize="24" kerning="off" lineHeight="120%" textAlign="center" d:userLabel="Usuário:" whiteSpaceCollapse="preserve" x="346" y="340">
+		<s:content><s:p><s:span>Usuário:</s:span></s:p></s:content>
+	</s:RichText>
+	<s:RichText alpha="0.5" color="#000000" fontFamily="Calibri" fontSize="24" kerning="off" lineHeight="120%" textAlign="center" d:userLabel="Senha:" whiteSpaceCollapse="preserve" x="362" y="382">
+		<s:content><s:p><s:span>Senha:</s:span></s:p></s:content>
+	</s:RichText>
+</s:Application>

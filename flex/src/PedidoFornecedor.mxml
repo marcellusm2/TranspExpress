@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:services="services.*"
+			   minWidth="1024" minHeight="600" backgroundColor="#F5F5F5">
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.*;
+			import com.adobe.fiber.core.model_internal;
+			
+			import events.Aceitar;
+			import events.MyObject;
+			
+			import flash.net.*;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.core.IFlexDisplayObject;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.ResultEvent;
+			import mx.rpc.remoting.mxml.RemoteObject;			
+			import spark.events.GridSelectionEvent;			
+			
+			private function init():void
+			{
+				dgServicos.addEventListener("aceitar", aceitar);
+			}
+			
+			public function aceitar(event:Event):void
+			{
+				//var abrir:IFlexDisplayObject = Aceitar.abrirPOPUP(dgServicos.selectedItem);
+				lbUser.text = "Usuário";
+				PopUpManager.createPopUp(DisplayObject(Application), Aceitar, true);
+			}
+			
+			
+			protected function dataGrid_creationCompleteHandler(event:FlexEvent):void
+			{
+				buscaPropostaResult.token = serverController.buscaProposta();
+				//buscaPropostaResult2.token = serverController.buscaProposta();
+				//buscaPropostaResult3.token = serverController.buscaProposta();
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:CallResponder id="buscaPropostaResult"/>
+		<services:ServerController id="serverController"
+								   fault="Alert.show(event.fault.faultString + '\n' + event.fault.faultDetail)"
+								   showBusyCursor="true"/>
+		<s:CallResponder id="buscaPropostaResult2"/>
+		<s:CallResponder id="buscaPropostaResult3"/>
+		
+	</fx:Declarations>
+	<s:Image y="0" width="231" height="162" horizontalCenter="-305"
+			 source="images/fundo_cavalo2.png"/>
+	<s:Image y="-19" width="625" height="277" horizontalCenter="194"
+			 source="images/DSF_bakground1.png"/>
+	<s:Label y="123" color="#8D8D8D" fontFamily="Verdana" fontSize="30" horizontalCenter="270"
+			 text="Módulo Fornecedor"/>
+	<s:Label y="27" horizontalCenter="264" text="Bem-Vindo"/>
+	<s:Label id="lbUser" y="27" horizontalCenter="331" text="Fornecedor,"/>
+	<s:Label id="txtLogout" y="27" color="#FF0000" horizontalCenter="391" text="Logout"/>
+	<mx:TabNavigator y="161" width="1000" height="444" horizontalCenter="7">
+		<s:NavigatorContent width="100%" height="100%" label="Solicitar Serviço">
+			<s:DataGrid id="dgServicos" x="10" y="10" height="391" minWidth="980" maxWidth="980"
+						creationComplete="dataGrid_creationCompleteHandler(event)"
+						requestedRowCount="4" sortableColumns="true">
+				<s:columns>
+					<s:ArrayList>
+						<s:GridColumn width="20" dataField="idf_proposta" headerText="Nº Proposta"></s:GridColumn>
+						<s:GridColumn width="70" dataField="nme_cliente" headerText="Cliente"></s:GridColumn>
+						<s:GridColumn width="60" dataField="des_veiculo" headerText="Veículo"></s:GridColumn>
+						<s:GridColumn width="60" dataField="des_carga" headerText="Carga"></s:GridColumn>
+						<s:GridColumn width="40" dataField="qtd_item" headerText="Quantidade"></s:GridColumn>
+						<s:GridColumn width="50" dataField="peso_carga" headerText="Peso"></s:GridColumn>
+						<s:GridColumn dataField="endereco_origem" headerText="Origem"></s:GridColumn>
+						<s:GridColumn dataField="endereco_destino" headerText="Destino"></s:GridColumn>
+						<s:GridColumn width="115" dataField="dta_proposta" headerText="Data/Hora"></s:GridColumn>
+						<s:GridColumn width="70" dataField="des_status_proposta" headerText="Status"></s:GridColumn>
+						<s:GridColumn width="70" dataField="aceitar" editable="false" headerText="">
+							<s:itemRenderer>
+								<fx:Component>									
+									<s:GridItemRenderer>
+										<s:Button height="100%" id="btnAceitar" label="Aceitar" click="dispatchEvent(new Event('aceitar', true))" />
+									</s:GridItemRenderer>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>
+					</s:ArrayList>
+				</s:columns>
+				<s:typicalItem>
+					<fx:Object des_carga="des_carga1" des_proposta="des_proposta1"
+							   des_status_proposta="des_status_proposta1" des_veiculo="des_veiculo1"
+							   dta_cadastro="dta_cadastro1" dta_proposta="dta_proposta1"
+							   endereco_destino="endereco_destino1"
+							   endereco_origem="endereco_origem1" idf_cliente="idf_cliente1"
+							   idf_proposta="idf_proposta1"
+							   idf_status_proposta="idf_status_proposta1" nme_cliente="nme_cliente1"
+							   peso_carga="peso_carga1" qtd_item="qtd_item1"></fx:Object>
+				</s:typicalItem>
+				<s:AsyncListView list="{buscaPropostaResult.lastResult}"/>
+			</s:DataGrid>			
+		</s:NavigatorContent>
+		<s:NavigatorContent width="100%" height="100%" label="Meus Fretes">
+			<s:DataGrid id="dgFretes" x="9" y="14" width="834" height="394" requestedRowCount="4"
+						resizableColumns="true">
+				<s:columns>
+					<s:ArrayList>
+						<s:GridColumn width="70" dataField="veiculo" headerText="Veículo"></s:GridColumn>
+						<s:GridColumn width="70" dataField="carga" headerText="Carga"></s:GridColumn>
+						<s:GridColumn width="40" dataField="quantidade" headerText="Quantidade"></s:GridColumn>
+						<s:GridColumn width="60" dataField="peso" headerText="Peso"></s:GridColumn>
+						<s:GridColumn dataField="origem" headerText="Origem"></s:GridColumn>
+						<s:GridColumn dataField="destino" headerText="Destino"></s:GridColumn>
+						<s:GridColumn width="70" dataField="data" headerText="Data"></s:GridColumn>
+						<s:GridColumn width="50" dataField="hora" headerText="Hora"></s:GridColumn>
+						<s:GridColumn width="70" dataField="detalhes" editable="false" headerText="">
+							<s:itemRenderer>
+								<fx:Component>									
+									<s:GridItemRenderer>
+										<!--<s:Button height="100%" label="Detalhes" click="dispatchEvent(new Event('detalhes', true))" />-->
+									</s:GridItemRenderer>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>						
+					</s:ArrayList>
+				</s:columns>
+				<s:typicalItem>
+					<fx:Object dataField1="Sample Data" dataField2="Sample Data"
+							   dataField3="Sample Data"></fx:Object>
+				</s:typicalItem>
+				<s:ArrayList>
+					<fx:Object veiculo="Scania" carga="Cerveja" quantidade="500" peso="1000 Kg" origem="R. Chile, n 456 - Curitiba/PR" destino="R. America, n 36 - Bauru/SP" data="25/06/11" hora="06:00"></fx:Object>					
+				</s:ArrayList>
+			</s:DataGrid>
+		</s:NavigatorContent>
+	</mx:TabNavigator>	
+</s:Application>

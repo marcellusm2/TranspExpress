@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:services="services.*"
+			   minWidth="1024" minHeight="700" backgroundColor="#F5F5F5" creationComplete="init()">
+
+	
+	<fx:Script>
+		<![CDATA[
+			import flash.utils.describeType;
+			
+			import flashx.textLayout.conversion.ConversionType;
+			import flashx.textLayout.conversion.ConverterBase;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.rpc.http.HTTPService;
+			
+			var servico:HTTPService = new HTTPService();
+			
+			[Bindable]
+			public var tipoVeiculo:ArrayCollection = 
+				new ArrayCollection(["Scania", "Cegonha", "Tanque",
+					"Frigorificado", "Climatizado", "Comum", "Van"]);
+			
+			[Bindable]
+			public var tipoCarga:ArrayCollection = 
+				new ArrayCollection(["Cerveja", "Alimento", 
+					"Automóvel", "Caixa", "Envelope", "Gasolina"]);
+			
+			protected function button1_clickHandler(event:MouseEvent):void
+			{
+				if (txCepOrigem.text != "")
+				{
+				servico.url = "http://www.buscarcep.com.br/?";
+				servico.method = "GET";
+				servico.resultFormat = "e4x";
+				
+				var argumentos:URLVariables = new URLVariables();
+				argumentos.formato = "xml";
+				argumentos.chave="1n3j1GjD9NvPPibwnYkTrOMs2MyaI40";
+				argumentos.cep = txCepOrigem.text;
+				servico.send(argumentos);
+				servico.addEventListener(ResultEvent.RESULT,cepResultHandler)
+				servico.addEventListener(FaultEvent.FAULT,onError);
+				}else
+				{
+					Alert.show("Por favor Informe CEP");
+				}
+			}
+			private function cepResultHandler(event:ResultEvent):void{				
+				var x:XML = event.result as XML;
+
+				for each (var ret1:XML in event.result.retorno)				
+				{  
+					if (ret1.resultado_txt == "cep nao encontrado"){
+						Alert.show("CEP não encontrado!");
+										txLogrOrigem.text = "";
+										txCidadeOrigem.text = "";
+										txtEstadoOrigem.text = "";
+										txObsOrigem.text = "";
+										txBairroOrigem.text ="";
+
+					}
+					txLogrOrigem.text = ret1.tipo_logradouro +" "+ret1.logradouro+"\n";
+					txCidadeOrigem.text = ret1.cidade +"\n";
+					txtEstadoOrigem.text = ret1.uf +"\n";
+					txBairroOrigem.text = ret1.bairro + "\n";					
+				}				
+			}
+			protected function button2_clickHandler2(event:MouseEvent):void
+			{
+				if (txCepDestino.text != "")
+				{
+					servico.url = "http://www.buscarcep.com.br/?";
+					servico.method = "GET";
+					servico.resultFormat = "e4x";
+					
+					var argumentos1:URLVariables = new URLVariables();
+					argumentos1.formato = "xml";
+					argumentos1.chave="1n3j1GjD9NvPPibwnYkTrOMs2MyaI40";
+					argumentos1.cep = txCepDestino.text;
+					servico.send(argumentos1);
+					servico.addEventListener(ResultEvent.RESULT,cepResultHandler2)
+					servico.addEventListener(FaultEvent.FAULT,onError);
+				}else
+				{
+					Alert.show("Por favor Informe CEP");
+				}
+			}
+			private function cepResultHandler2(event:ResultEvent):void{				
+				var x:XML = event.result as XML;
+
+				for each (var ret2:XML in event.result.retorno)				
+				{  
+					if (ret2.resultado_txt == "cep nao encontrado"){
+						Alert.show("CEP não encontrado!");
+										txLogrDestino.text = "";
+										txCidadeDestino.text = "";
+										txEstadoDestino.text = "";
+										txObsDestino.text = "";
+										txBairroDestino.text ="";
+					}
+					txLogrDestino.text = ret2.tipo_logradouro +" "+ret2.logradouro+"\n";
+					txCidadeDestino.text = ret2.cidade +"\n";
+					txEstadoDestino.text = ret2.uf +"\n";
+					txBairroDestino.text = ret2.bairro + "\n";					
+				}				
+			}
+			private function onError(event:FaultEvent):void{				
+				Alert.show("Erro: " + event.message.toString());				
+			}		
+			
+					
+			
+			protected function button3_clickHandler(event:MouseEvent):void
+			{
+				// TODO Auto-generated method stub
+				
+			}
+			
+			
+			
+			protected function cadastrarProposta(arg0:String, arg1:String, arg2:int, arg3:int, arg4:String, arg5:String, arg6:String):void
+			{
+				cadastrarPropostaResult2.token = serverController.cadastrarProposta(arg0, arg1, arg2, arg3, arg4, arg5, arg6);
+			}
+			
+			
+			protected function button_clickHandler(event:MouseEvent):void
+			{
+				var endOrigem:String = txLogrOrigem.text+", "+txComplOrigem.text+" - "+txBairroOrigem.text+" - "+txCidadeOrigem.text+"/"+txtEstadoOrigem.text;
+				var endDestino:String = txLogrDestino.text+", "+txComplDestino.text+" - "+txBairroDestino.text+" - "+txCidadeDestino.text+"/"+txEstadoDestino.text;
+				var data:String = txData.text+" "+txHora.text;
+				var tipoVeiculo:String;
+				var tipoCarga:String;
+				switch (ddlVeiculo.selectedIndex){
+					case 0:
+						tipoVeiculo = "Scania";
+						break;
+					case 1:
+						tipoVeiculo = "Cegonha";
+						break;
+					case 2:
+						tipoVeiculo = "Tanque";
+						break;
+					case 3:
+						tipoVeiculo = "Frigorificado";
+						break;
+					case 4:
+						tipoVeiculo = "Climatizado";
+						break;
+					case 5:
+						tipoVeiculo = "Comum";
+						break;
+					case 6:
+						tipoVeiculo = "Van";
+						break;
+					
+					default: break;						
+				}
+				switch (ddlCarga.selectedIndex){
+					case 0:
+						tipoCarga = "Cerveja";
+						break;
+					case 1:
+						tipoCarga = "Alimento";
+						break;
+					case 2:
+						tipoCarga = "Automóvel";
+						break;
+					case 3:
+						tipoCarga = "Caixa";
+						break;
+					case 4:
+						tipoCarga = "Envelope";
+						break;
+					case 5:
+						tipoCarga = "Gasolina";
+						break;
+					
+					default: break;						
+				}
+				var qtd:int = numQtd.value;
+				cadastrarPropostaResult3.token = serverController.cadastrarProposta(tipoVeiculo,tipoCarga,qtd,parseInt(txtPeso.text),endOrigem,endDestino,data);
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:CallResponder id="cadastrarPropostaResult"/>
+		<services:ServerController id="serverController"
+								   fault="Alert.show(event.fault.faultString + '\n' + event.fault.faultDetail)"
+								   showBusyCursor="true"/>
+		<s:CallResponder id="cadastrarPropostaResult2"/>
+		<s:CallResponder id="cadastrarPropostaResult3"/>
+	</fx:Declarations>
+	<s:Image y="0" width="231" height="162" horizontalCenter="-305"
+			 source="images/fundo_cavalo2.png"/>
+	<s:Image y="-19" width="625" height="269" horizontalCenter="122"
+			 source="images/DSF_bakground1.png"/>
+	<s:Label y="123" color="#8D8D8D" fontFamily="Verdana" fontSize="30" horizontalCenter="270"
+			 text="Módulo Cliente"/>
+	<s:Label y="27" horizontalCenter="264" text="Bem-Vindo"/>
+	<s:Label id="lbUser" y="27" horizontalCenter="331" text="Fornecedor,"/>
+	<s:Label id="txtLogout" y="27" color="#FF0000" horizontalCenter="391" text="Logout"/>
+	<mx:TabNavigator y="161" width="855" height="538" horizontalCenter="7">
+		<s:NavigatorContent width="100%" height="100%" label="Solicitar Serviço">
+			<s:Label x="6" y="10" fontSize="15" fontWeight="bold" text="Local Coleta"/>
+			<s:Label x="10" y="149" fontSize="15" fontWeight="bold" text="Local Entrega"/>
+			<s:Label x="10" y="47" fontSize="14" text="CEP:"/>
+			<s:TextInput id="txCepOrigem" x="43" y="40" width="78" enabled="true"/>
+			<s:Label x="163" y="47" fontSize="14" text="Estado"/>
+			<s:Label x="251" y="46" fontSize="14" text="Cidade"/>
+			<s:Label x="10" y="75" fontSize="14" text="Logradouro:"/>
+			<s:TextInput id="txLogrOrigem" x="100" y="67" width="472"/>
+			<s:Label x="11" y="105" fontSize="14" text="Complemento:"/>
+			<s:TextInput id="txComplOrigem" x="116" y="97"/>
+			<s:Label x="246" y="107" text="Obs:"/>
+			<s:TextInput id="txObsOrigem" x="281" y="97" width="291"/>
+			<s:Label x="11" y="284" fontSize="15" fontWeight="bold" text="Dados Complementares"/>
+			<s:Label x="11" y="316" fontSize="14" text="Tipo Veiculo"/>
+			<s:DropDownList id="ddlVeiculo" dataProvider="{tipoVeiculo}" x="99" y="309" width="228"></s:DropDownList>
+			<s:Label x="332" y="317" fontSize="14" text="Tipo Carga"/>
+			<s:Label x="375" y="372" fontSize="14" text="Data"/>
+			<s:Label x="375" y="414" fontSize="14" text="Hora"/>
+			<s:DropDownList id="ddlCarga" dataProvider="{tipoCarga}" x="413" y="309" width="162"></s:DropDownList>
+			<s:Label x="10" y="348" fontSize="14" text="Quantidade"/>
+			<s:NumericStepper id="numQtd" x="92" y="338"/>
+			<s:Label x="165" y="348" fontSize="14" text="Peso:"/>
+			<s:TextInput id="txtPeso" x="205" y="340"/>
+			<s:Label x="52" y="370" fontSize="14" text="Obs:"/>
+			<s:TextArea x="90" y="370" width="237" height="128"/>
+			<s:Button x="125" y="35" width="36" height="29" label="Button"
+					  click="button1_clickHandler(event)" icon="assets/Lupa(3).png"/>
+			<s:TextInput id="txtEstadoOrigem" x="217" y="39" width="29"/>
+			<s:TextInput id="txCidadeOrigem" x="300" y="40"/>
+			<s:TextInput id="txBairroOrigem" x="464" y="40"/>
+			<s:Label x="418" y="44" fontSize="14" text="Bairro"/>
+			<s:Label x="13" y="177" fontSize="14" text="CEP:"/>
+			<s:TextInput id="txCepDestino" x="46" y="170" width="78" enabled="true"/>
+			<s:Label x="166" y="177" fontSize="14" text="Estado"/>
+			<s:Label x="254" y="176" fontSize="14" text="Cidade"/>
+			<s:Label x="13" y="205" fontSize="14" text="Logradouro:"/>
+			<s:TextInput id="txLogrDestino" x="103" y="197" width="472"/>
+			<s:Label x="14" y="235" fontSize="14" text="Complemento:"/>
+			<s:TextInput id="txComplDestino" x="118" y="227"/>
+			<s:Label x="249" y="237" text="Obs:"/>
+			<s:TextInput id="txObsDestino" x="284" y="227" width="291"/>
+			<s:Button x="126" y="159" width="32" height="30" label="Button"
+					  click="button2_clickHandler2(event)" icon="assets/Lupa(4).png"/>
+			<s:TextInput id="txEstadoDestino" x="220" y="169" width="29"/>
+			<s:TextInput id="txCidadeDestino" x="303" y="170"/>
+			<s:TextInput id="txBairroDestino" x="467" y="170"/>
+			<s:Label x="421" y="174" fontSize="14" text="Bairro"/>
+			<mx:VRule x="607" y="17" width="4" height="478"/>
+			<s:Button id="button" x="743" y="39" label="Gravar" click="button_clickHandler(event)"/>
+			<s:Button x="642" y="39" label="Rota"/>
+			<mx:DateField id="txData" x="413" y="366"/>
+			<s:TextInput id="txHora" x="413" y="410" width="75"/>
+		</s:NavigatorContent>
+		<s:NavigatorContent width="100%" height="100%" label="Minhas Solicitações">
+			<s:DataGrid id="dgFretes" x="9" y="14" width="834" height="394" requestedRowCount="4"
+						resizableColumns="true">
+				<s:columns>
+					<s:ArrayList>
+						<s:GridColumn width="70" dataField="veiculo" headerText="Veículo"></s:GridColumn>
+						<s:GridColumn width="70" dataField="carga" headerText="Carga"></s:GridColumn>
+						<s:GridColumn width="40" dataField="quantidade" headerText="Quantidade"></s:GridColumn>
+						<s:GridColumn width="60" dataField="peso" headerText="Peso"></s:GridColumn>
+						<s:GridColumn dataField="origem" headerText="Origem"></s:GridColumn>
+						<s:GridColumn dataField="destino" headerText="Destino"></s:GridColumn>
+						<s:GridColumn width="70" dataField="data" headerText="Data"></s:GridColumn>
+						<s:GridColumn width="50" dataField="hora" headerText="Hora"></s:GridColumn>
+						<s:GridColumn width="70" dataField="detalhes" editable="false" headerText="">
+							<s:itemRenderer>
+								<fx:Component>									
+									<s:GridItemRenderer>
+										<s:Button height="100%" label="Detalhes"
+												  click="dispatchEvent(new Event('detalhes', true))"/>
+									</s:GridItemRenderer>
+								</fx:Component>
+							</s:itemRenderer>
+						</s:GridColumn>						
+					</s:ArrayList>
+				</s:columns>
+				<s:typicalItem>
+					<fx:Object dataField1="Sample Data" dataField2="Sample Data"
+							   dataField3="Sample Data"></fx:Object>
+				</s:typicalItem>
+				<s:ArrayList>
+					<fx:Object carga="Cerveja" data="25/06/11" destino="R. America, n 36 - Bauru/SP"
+							   hora="06:00" origem="R. Chile, n 456 - Curitiba/PR" peso="1000 Kg"
+							   quantidade="500" veiculo="Scania"></fx:Object>					
+				</s:ArrayList>
+			</s:DataGrid>
+		</s:NavigatorContent>
+	</mx:TabNavigator>						
+</s:Application>
